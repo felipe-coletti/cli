@@ -14,46 +14,43 @@ var commands = []*cli.Command{
 	NewVersionCmd(),
 }
 
-func Root() {
-	if len(os.Args) < 2 {
-		ShowHelp(commands)
+func dispatch(commands []*cli.Command, args []string) {
+    if len(args) == 0 {
+        ShowHelp(commands)
+        
 		return
-	}
+    }
 
-	input := os.Args[1]
-	args := os.Args[2:]
+    input := args[0]
+    rest := args[1:]
 
-	if input == "help" {
-		ShowHelp(commands, args...)
-
-		return
-	}
-
-	for _, cmd := range commands {
-		if cmd.Name == input || contains(cmd.Aliases, input) {
-			if len(cmd.Subcommands) > 0 && len(args) > 0 {
-				for _, sub := range cmd.Subcommands {
-					if sub.Name == args[0] {
-						sub.Run(args[1:])
-
-						return
-					}
-				}
-
-				fmt.Printf("Unknown subcommand: %s\n\n", args[0])
-
-				ShowHelp([]*cli.Command{cmd})
-
+    for _, cmd := range commands {
+        if cmd.Name == input || contains(cmd.Aliases, input) {
+            if len(cmd.Subcommands) > 0 && len(rest) > 0 {
+                dispatch(cmd.Subcommands, rest)
+                
 				return
-			}
+            }
 
-			cmd.Run(args)
-
+            cmd.Run(rest)
+            
 			return
-		}
-	}
+        }
+    }
 
-	fmt.Printf("Unknown command: %s\n\n", input)
+    fmt.Printf("Unknown command: %s\n\n", input)
 
-	ShowHelp(commands)
+    ShowHelp(commands)
+}
+
+func Root() {
+    args := os.Args[1:]
+
+    if len(args) == 0 || args[0] == "help" {
+        ShowHelp(commands, args[1:]...)
+
+        return
+    }
+
+    dispatch(commands, args)
 }
