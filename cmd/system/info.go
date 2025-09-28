@@ -44,7 +44,7 @@ func InfoRun(args []string) {
 	fmt.Fprintf(writer, "CPU Cores:\t%d\n", runtime.NumCPU())
 	fmt.Fprintf(writer, "Environment Variables:\t%d\n\n", len(os.Environ()))
 	fmt.Fprintln(writer, "=== Host Info ===")
-	fmt.Fprintf(writer, "Hostname:\t%s\n", hostname)
+	fmt.Fprintf(writer, "Host Name:\t%s\n", hostname)
 	fmt.Fprintf(writer, "User:\t%s\n", user)
 	fmt.Fprintf(writer, "Date:\t%s\n", currentDate)
 	fmt.Fprintf(writer, "Time:\t%s\n", currentTime)
