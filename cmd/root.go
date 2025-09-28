@@ -9,9 +9,10 @@ import (
 )
 
 var commands = []*cli.Command{
-	system.NewSystemCmd(),
-	password.NewPasswordCmd(),
+    NewDateCmd(),
 	NewVersionCmd(),
+    password.NewPasswordCmd(),
+    system.NewSystemCmd(),
 }
 
 func dispatch(commands []*cli.Command, args []string) {
