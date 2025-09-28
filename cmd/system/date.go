@@ -1,15 +1,14 @@
-package cmd
+package system
 
 import (
 	"cli/internal/cli"
 	"cli/internal/meta"
 	"fmt"
-	"os"
 	"time"
 )
 
 func DateRun(args []string) {
-	format := "2006-01-02 15:04:05"
+	format := "2006-01-02 15:04:05 MSTZ07:00"
 
 	if len(args) > 0 {
 		format = args[0]
@@ -17,7 +16,7 @@ func DateRun(args []string) {
 
 	now := time.Now()
 
-	fmt.Fprintln(os.Stdout, now.Format(format))
+	fmt.Println(now.Format(format))
 }
 
 func DateHelp() {

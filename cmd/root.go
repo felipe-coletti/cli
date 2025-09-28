@@ -9,7 +9,6 @@ import (
 )
 
 var commands = []*cli.Command{
-    NewDateCmd(),
 	NewVersionCmd(),
     password.NewPasswordCmd(),
     system.NewSystemCmd(),
