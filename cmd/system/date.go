@@ -20,15 +20,13 @@ func DateRun(args []string) {
 }
 
 func DateHelp() {
-	fmt.Printf("Usage: %s date [format]\n", meta.Name)
-	fmt.Println()
+	fmt.Printf("Usage: %s system date [format]\n\n", meta.Name)
 	fmt.Println("Show the current date and time")
-	fmt.Println()
-	fmt.Println("Examples:")
+	fmt.Println("\nExamples:")
 	fmt.Printf("  %s date    # yyyy-mm-dd hh:mm:ss\n", meta.Name)
 	fmt.Printf("  %s time    # yyyy-mm-dd hh:mm:ss\n", meta.Name)
-	fmt.Printf("  %s date yyyy-mm-dd\n", meta.Name)
-	fmt.Printf("  %s date hh:mm:ss\n", meta.Name)
+	fmt.Printf("  %s date 2006-01-02\n", meta.Name)
+	fmt.Printf("  %s date 15:04:05\n", meta.Name)
 }
 
 func NewDateCmd() *cli.Command {

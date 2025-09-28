@@ -23,8 +23,7 @@ func GenerateRun(args []string) {
 }
 
 func GenerateHelp() {
-	fmt.Printf("Usage: %s generate [options]\n", meta.Name)
-	fmt.Println()
+	fmt.Printf("Usage: %s password generate [options]\n\n", meta.Name)
 	fmt.Println("Generate random passwords")
 	fmt.Println()
 	fmt.Println("Options:")
@@ -36,9 +35,9 @@ func GenerateHelp() {
 	fmt.Println("  --symbols, -s           Include special symbols")
 	fmt.Println()
 	fmt.Println("Examples:")
-	fmt.Printf("  %s generate    # 1 password, 15 chars, all character types\n", meta.Name)
-	fmt.Printf("  %s generate --count 5 --length 15 --uppercase --lowercase --numbers --symbols\n", meta.Name)
-	fmt.Printf("  %s gen -C 5 -L 15 -u -l -n -s\n", meta.Name)
+	fmt.Printf("  %s password generate    # 1 password, 15 chars, all character types\n", meta.Name)
+	fmt.Printf("  %s password generate --count 5 --length 15 --uppercase --lowercase --numbers --symbols\n", meta.Name)
+	fmt.Printf("  %s password gen -C 5 -L 15 -u -l -n -s\n", meta.Name)
 }
 
 func NewGenerateCmd() *cli.Command {
