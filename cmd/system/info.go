@@ -2,7 +2,6 @@ package system
 
 import (
 	"cli/internal/cli"
-	"cli/internal/meta"
 	"fmt"
 	"os"
 	"runtime"
@@ -57,17 +56,10 @@ func InfoRun(args []string) {
 
 }
 
-func InfoHelp() {
-	fmt.Printf("Usage: %s system info\n", meta.Name)
-	fmt.Println()
-	fmt.Println("Show the CLI info")
-}
-
 func NewInfoCmd() *cli.Command {
 	return &cli.Command{
 		Name:        "info",
 		Description: "Show CLI info",
 		Run:         InfoRun,
-		Help:        InfoHelp,
 	}
 }

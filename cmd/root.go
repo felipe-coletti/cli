@@ -6,51 +6,52 @@ import (
 	"cli/internal/cli"
 	"fmt"
 	"os"
+	"slices"
 )
 
 var commands = []*cli.Command{
 	NewVersionCmd(),
-    password.NewPasswordCmd(),
-    system.NewSystemCmd(),
+	password.NewPasswordCmd(),
+	system.NewSystemCmd(),
 }
 
 func dispatch(commands []*cli.Command, args []string) {
-    if len(args) == 0 {
-        ShowHelp(commands)
-        
+	if len(args) == 0 {
+		ShowHelp(commands)
+
 		return
-    }
+	}
 
-    input := args[0]
-    rest := args[1:]
+	input := args[0]
+	rest := args[1:]
 
-    for _, cmd := range commands {
-        if cmd.Name == input || contains(cmd.Aliases, input) {
-            if len(cmd.Subcommands) > 0 && len(rest) > 0 {
-                dispatch(cmd.Subcommands, rest)
-                
+	for _, cmd := range commands {
+		if cmd.Name == input || slices.Contains(cmd.Aliases, input) {
+			if len(cmd.Subcommands) > 0 && len(rest) > 0 {
+				dispatch(cmd.Subcommands, rest)
+
 				return
-            }
+			}
 
-            cmd.Run(rest)
-            
+			cmd.Run(rest)
+
 			return
-        }
-    }
+		}
+	}
 
-    fmt.Printf("Unknown command: %s\n\n", input)
+	fmt.Printf("Unknown command: %s\n\n", input)
 
-    ShowHelp(commands)
+	ShowHelp(commands)
 }
 
 func Root() {
-    args := os.Args[1:]
+	args := os.Args[1:]
 
-    if len(args) == 0 || args[0] == "help" {
-        ShowHelp(commands, args[1:]...)
+	if len(args) == 0 || args[0] == "help" {
+		ShowHelp(commands, args[1:]...)
 
-        return
-    }
+		return
+	}
 
-    dispatch(commands, args)
+	dispatch(commands, args)
 }
