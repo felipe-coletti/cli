@@ -33,11 +33,11 @@ func GenerateRun(args []string) {
 
 	fs.Parse(args)
 
+	writer := tabwriter.NewWriter(os.Stdout, 0, 8, 2, '\t', 0)
+	defer writer.Flush()
+
 	for i := 0; i < *count; i++ {
 		pass := password.Generate(*length, *uppercase, *lowercase, *numbers, *symbols)
-
-		writer := tabwriter.NewWriter(os.Stdout, 0, 8, 2, '\t', 0)
-		defer writer.Flush()
 
 		fmt.Fprintf(writer, "%d\t%s\n", i + 1, pass)
 	}
