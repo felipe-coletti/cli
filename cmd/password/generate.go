@@ -6,38 +6,60 @@ import (
 	"cli/internal/password"
 	"flag"
 	"fmt"
+	"os"
+	"text/tabwriter"
 )
 
 func GenerateRun(args []string) {
 	fs := flag.NewFlagSet("gen", flag.ExitOnError)
 
-	length := fs.Int("L", 15, "Password length")
-	uppercase := fs.Bool("u", false, "Include uppercase letters")
-	lowercase := fs.Bool("l", false, "Include lowercase letters")
-	numbers := fs.Bool("n", false, "Include numbers")
-	symbols := fs.Bool("s", false, "Include symbols")
+	count := fs.Int("count", 1, "Password count")
+	fs.IntVar(count, "C", 1, "Password count (short)")
+
+	length := fs.Int("length", 15, "Password length")
+	fs.IntVar(length, "L", 15, "Password length (short)")
+
+	uppercase := fs.Bool("uppercase", false, "Include uppercase letters")
+	fs.BoolVar(uppercase, "u", false, "Include uppercase letters (short)")
+
+	lowercase := fs.Bool("lowercase", false, "Include lowercase letters")
+	fs.BoolVar(lowercase, "l", false, "Include lowercase letters (short)")
+
+	numbers := fs.Bool("numbers", false, "Include numbers")
+	fs.BoolVar(numbers, "n", false, "Include numbers (short)")
+
+	symbols := fs.Bool("symbols", false, "Include symbols")
+	fs.BoolVar(symbols, "s", false, "Include symbols (short)")
 
 	fs.Parse(args)
 
-	fmt.Println(password.Generate(*length, *uppercase, *lowercase, *numbers, *symbols))
+	for i := 0; i < *count; i++ {
+		pass := password.Generate(*length, *uppercase, *lowercase, *numbers, *symbols)
+
+		writer := tabwriter.NewWriter(os.Stdout, 0, 8, 2, '\t', 0)
+		defer writer.Flush()
+
+		fmt.Fprintf(writer, "%d\t%s\n", i + 1, pass)
+	}
 }
 
 func GenerateHelp() {
-	fmt.Printf("Usage: %s password generate [options]\n\n", meta.Name)
-	fmt.Println("Generate random passwords")
-	fmt.Println()
-	fmt.Println("Options:")
-	fmt.Println("  --count, -C <num>       Number of passwords (default: 1)")
-	fmt.Println("  --length, -L <num>      Length of each password (default: 15)")
-	fmt.Println("  --uppercase, -u         Include uppercase letters")
-	fmt.Println("  --lowercase, -l         Include lowercase letters")
-	fmt.Println("  --numbers, -n           Include numbers")
-	fmt.Println("  --symbols, -s           Include special symbols")
-	fmt.Println()
-	fmt.Println("Examples:")
-	fmt.Printf("  %s password generate    # 1 password, 15 chars, all character types\n", meta.Name)
-	fmt.Printf("  %s password generate --count 5 --length 15 --uppercase --lowercase --numbers --symbols\n", meta.Name)
-	fmt.Printf("  %s password gen -C 5 -L 15 -u -l -n -s\n", meta.Name)
+	writer := tabwriter.NewWriter(os.Stdout, 0, 8, 2, '\t', 0)
+	defer writer.Flush()
+
+	fmt.Fprintf(writer, "Usage: %s password generate [options]\n\n", meta.Name)
+	fmt.Fprintln(writer, "Generate random passwords")
+	fmt.Fprintln(writer, "\nOptions:")
+	fmt.Fprintln(writer, "  --count, -C <num>\tNumber of passwords (default: 1)")
+	fmt.Fprintln(writer, "  --length, -L <num>\tLength of each password (default: 15)")
+	fmt.Fprintln(writer, "  --uppercase, -u\tInclude uppercase letters")
+	fmt.Fprintln(writer, "  --lowercase, -l\tInclude lowercase letters")
+	fmt.Fprintln(writer, "  --numbers, -n\tInclude numbers")
+	fmt.Fprintln(writer, "  --symbols, -s\tInclude special symbols")
+	fmt.Fprintln(writer, "\nExamples:")
+	fmt.Fprintf(writer, "  %s password generate    # 1 password, 15 chars, all character types\n", meta.Name)
+	fmt.Fprintf(writer, "  %s password generate --count 5 --length 15 --uppercase --lowercase --numbers --symbols\n", meta.Name)
+	fmt.Fprintf(writer, "  %s password gen -C 5 -L 15 -u -l -n -s\n", meta.Name)
 }
 
 func NewGenerateCmd() *cli.Command {
