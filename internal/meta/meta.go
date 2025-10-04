@@ -1,6 +1,6 @@
 package meta
 
 const (
-	Name    = "cli"
+	Name    = "mycli"
 	Version = "1.0.0"
 )
