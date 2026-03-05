@@ -4,8 +4,8 @@ import "cli/internal/cli"
 
 func NewCryptoCmd() *cli.Command {
 	return &cli.Command{
-		Name:        "crypto",
-		Aliases:     []string{"crypt"},
+		Name:        "cryptography",
+		Aliases:     []string{"crypto"},
 		Description: "Cryptography related commands",
 		Subcommands: []*cli.Command{
 			NewEncryptCmd(),
