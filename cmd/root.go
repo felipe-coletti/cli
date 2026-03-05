@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"cli/cmd/crypto"
 	"cli/cmd/password"
 	"cli/cmd/system"
 	"cli/internal/cli"
@@ -11,6 +12,7 @@ import (
 
 var commands = []*cli.Command{
 	NewVersionCmd(),
+	crypto.NewCryptoCmd(),
 	password.NewPasswordCmd(),
 	system.NewSystemCmd(),
 }

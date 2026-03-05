@@ -31,7 +31,7 @@ func GenerateRun(args []string) {
 	symbols := fs.Bool("symbols", false, "Include symbols")
 	fs.BoolVar(symbols, "s", false, "Include symbols (short)")
 
-	fs.Parse(password.PreprocessArgs(args))
+	fs.Parse(cli.PreprocessArgs(args))
 
 	writer := tabwriter.NewWriter(os.Stdout, 0, 8, 2, '\t', 0)
 	defer writer.Flush()
@@ -39,7 +39,7 @@ func GenerateRun(args []string) {
 	for i := 0; i < *count; i++ {
 		pass := password.Generate(*length, *uppercase, *lowercase, *numbers, *symbols)
 
-		fmt.Fprintf(writer, "%d\t%s\n", i + 1, pass)
+		fmt.Fprintf(writer, "%d\t%s\n", i+1, pass)
 	}
 }
 
