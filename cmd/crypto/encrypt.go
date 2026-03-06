@@ -36,7 +36,7 @@ func EncryptRun(args []string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Encrypted: %s\n", result)
+	fmt.Printf(result)
 }
 
 func EncryptHelp() {

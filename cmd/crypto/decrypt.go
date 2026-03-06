@@ -36,7 +36,7 @@ func DecryptRun(args []string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Decrypted: %s\n", result)
+	fmt.Printf(result)
 }
 
 func DecryptHelp() {
