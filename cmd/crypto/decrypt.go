@@ -21,41 +21,14 @@ func DecryptRun(args []string) {
 	key := fs.String("key", "", "Decryption key")
 	fs.StringVar(key, "k", "", "Decryption key (short)")
 
-	input := fs.String(
-		"input",
-		"",
-		"Path to input file to decrypt (if omitted, reads from stdin)",
-	)
-	fs.StringVar(
-		input,
-		"i",
-		"",
-		"Path to input file to decrypt (short)",
-	)
+	input := fs.String("input", "", "Path to input file to decrypt (if omitted, reads from stdin)")
+	fs.StringVar(input, "i", "", "Path to input file to decrypt (short)")
 
-	output := fs.String(
-		"output",
-		"",
-		"Path to output file (if omitted, writes to stdout)",
-	)
-	fs.StringVar(
-		output,
-		"o",
-		"",
-		"Path to output file (short)",
-	)
+	output := fs.String("output", "", "Path to output file (if omitted, writes to stdout)")
+	fs.StringVar(output, "o", "", "Path to output file (short)")
 
-	force := fs.Bool(
-		"force",
-		false,
-		"Overwrite output file if it exists",
-	)
-	fs.BoolVar(
-		force,
-		"f",
-		false,
-		"Overwrite output file (short)",
-	)
+	force := fs.Bool("force", false, "Overwrite output file if it exists")
+	fs.BoolVar(force, "F", false, "Overwrite output file (short)")
 
 	fs.Parse(cli.PreprocessArgs(args))
 
