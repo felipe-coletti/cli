@@ -49,16 +49,16 @@ func ExtractRun(args []string) {
 		os.Exit(1)
 	}
 
-	file, err := os.Open(*input)
+	inputFile, err := cli.OpenInput(*input)
 	if err != nil {
 		fmt.Fprintf(
 			os.Stderr,
-			"Error opening input archive: %v\n",
+			"Error: %v\n",
 			err,
 		)
 		os.Exit(1)
 	}
-	defer file.Close()
+	defer inputFile.Close()
 
 	options := archive.ExtractOptions{
 		Force: *force,
@@ -66,7 +66,7 @@ func ExtractRun(args []string) {
 
 	if err := archive.Extract(
 		*format,
-		file,
+		inputFile,
 		*output,
 		options,
 	); err != nil {

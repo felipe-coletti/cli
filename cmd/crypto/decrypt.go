@@ -4,11 +4,10 @@ import (
 	"cli/internal/cli"
 	"cli/internal/crypto"
 	"cli/internal/meta"
-	"encoding/base64"
 	"flag"
 	"fmt"
+	"io"
 	"os"
-	"strings"
 	"text/tabwriter"
 )
 
@@ -35,45 +34,100 @@ func DecryptRun(args []string) {
 	if *key == "" {
 		fmt.Fprintln(os.Stderr, "Error: --key (-k) is required")
 		fmt.Fprintln(os.Stderr)
+
 		DecryptHelp()
 		os.Exit(1)
 	}
 
-	inputValue, err := crypto.ReadInput(*input)
+	if *input == "" {
+		*input = "-"
+	}
+
+	if *output == "" {
+		*output = "-"
+	}
+
+	// Entrada
+	in, err := cli.OpenInput(*input)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+	defer in.Close()
+
+	inputData, err := io.ReadAll(in)
+	if err != nil {
+		fmt.Fprintf(
+			os.Stderr,
+			"Error reading input: %v\n",
+			err,
+		)
+		os.Exit(1)
+	}
+
+	if len(inputData) == 0 {
+		fmt.Fprintln(os.Stderr, "Error: input is empty")
+		os.Exit(1)
+	}
+
+	// Descriptografia
+	result, err := crypto.Decrypt(
+		*cipher,
+		*key,
+		inputData,
+	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 
-	if *input == "" {
-		inputValue, err = base64.StdEncoding.DecodeString(strings.TrimSpace(string(inputValue)))
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: invalid Base64 input: %v\n", err)
+	// Verificação de arquivo existente
+	if *output != "-" {
+		if _, err := os.Stat(*output); err == nil && !*force {
+			fmt.Fprintf(
+				os.Stderr,
+				"Error: output file '%s' already exists. Use --force to overwrite.\n",
+				*output,
+			)
 			os.Exit(1)
 		}
 	}
 
-	result, err := crypto.Decrypt(*cipher, *key, inputValue)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
-	}
-
-	if *output != "" {
-		if err := crypto.WriteFile(*output, result, *force); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+	// Saída
+	if *output == "-" {
+		if _, err := os.Stdout.Write(result); err != nil {
+			fmt.Fprintf(
+				os.Stderr,
+				"Error writing output: %v\n",
+				err,
+			)
 			os.Exit(1)
+		}
+
+		// Só adiciona newline se stdout for terminal
+		// e o resultado for texto.
+		if !cli.IsOutputPiped() {
+			fmt.Println()
 		}
 
 		return
 	}
 
-	if _, err := os.Stdout.Write(result); err != nil {
-		fmt.Fprintf(os.Stderr, "Error writing output: %v\n", err)
+	out, err := cli.OpenOutput(*output)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
+	defer out.Close()
 
-	fmt.Println()
+	if _, err := out.Write(result); err != nil {
+		fmt.Fprintf(
+			os.Stderr,
+			"Error writing output: %v\n",
+			err,
+		)
+		os.Exit(1)
+	}
 }
 
 func DecryptHelp() {

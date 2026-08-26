@@ -17,7 +17,7 @@ func PackRun(args []string) {
 	input := fs.String("input", "", "Path to file or directory to archive")
 	fs.StringVar(input, "i", "", "Path to file or directory to archive (short)")
 
-	output := fs.String("output", "", "Path to output archive")
+	output := fs.String("output", "", "Path to output archive (use - for stdout)")
 	fs.StringVar(output, "o", "", "Path to output archive (short)")
 
 	format := fs.String("format", "tar", "Archive format (tar)")
@@ -39,11 +39,11 @@ func PackRun(args []string) {
 		os.Exit(1)
 	}
 
-	var out *os.File
-
 	if *output == "" {
-		out = os.Stdout
-	} else {
+		*output = "-"
+	}
+
+	if *output != "-" {
 		if _, err := os.Stat(*output); err == nil && !*force {
 			fmt.Fprintf(
 				os.Stderr,
@@ -52,28 +52,17 @@ func PackRun(args []string) {
 			)
 			os.Exit(1)
 		}
-
-		var err error
-
-		out, err = os.Create(*output)
-		if err != nil {
-			fmt.Fprintf(
-				os.Stderr,
-				"Error creating output file: %v\n",
-				err,
-			)
-			os.Exit(1)
-		}
-
-		defer out.Close()
 	}
 
+	out, err := cli.OpenOutput(*output)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+	defer out.Close()
+
 	if err := archive.Pack(*format, *input, out); err != nil {
-		fmt.Fprintf(
-			os.Stderr,
-			"Error: %v\n",
-			err,
-		)
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -86,7 +75,7 @@ func PackHelp() {
 	fmt.Fprintln(writer, "Create an archive from a file or directory.")
 	fmt.Fprintln(writer, "\nOptions:")
 	fmt.Fprintln(writer, "  --input, -i <path>\tInput file or directory (required)")
-	fmt.Fprintln(writer, "  --output, -o <path>\tOutput archive (optional, writes to stdout if omitted)")
+	fmt.Fprintln(writer, "  --output, -o <path>\tOutput archive (optional, use - for stdout)")
 	fmt.Fprintln(writer, "  --format, -f <type>\tArchive format: tar (default: tar)")
 	fmt.Fprintln(writer, "  --force, -F\t\tOverwrite output file if it exists")
 	fmt.Fprintln(writer, "\nExamples:")

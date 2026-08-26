@@ -4,8 +4,10 @@ import (
 	"cli/internal/cli"
 	"cli/internal/crypto"
 	"cli/internal/meta"
+	"encoding/base64"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"text/tabwriter"
 )
@@ -33,33 +35,104 @@ func EncryptRun(args []string) {
 	if *key == "" {
 		fmt.Fprintln(os.Stderr, "Error: --key (-k) is required")
 		fmt.Fprintln(os.Stderr)
+
 		EncryptHelp()
 		os.Exit(1)
 	}
 
-	inputValue, err := crypto.ReadInput(*input)
+	if *input == "" {
+		*input = "-"
+	}
+
+	if *output == "" {
+		*output = "-"
+	}
+
+	// Entrada
+	in, err := cli.OpenInput(*input)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+	defer in.Close()
+
+	inputData, err := io.ReadAll(in)
+	if err != nil {
+		fmt.Fprintf(
+			os.Stderr,
+			"Error reading input: %v\n",
+			err,
+		)
+		os.Exit(1)
+	}
+
+	if len(inputData) == 0 {
+		fmt.Fprintln(os.Stderr, "Error: input is empty")
+		os.Exit(1)
+	}
+
+	// Criptografia
+	result, err := crypto.Encrypt(
+		*cipher,
+		*key,
+		inputData,
+	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 
-	result, err := crypto.Encrypt(*cipher, *key, inputValue)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
+	// Verificação de arquivo existente
+	if *output != "-" {
+		if _, err := os.Stat(*output); err == nil && !*force {
+			fmt.Fprintf(
+				os.Stderr,
+				"Error: output file '%s' already exists. Use --force to overwrite.\n",
+				*output,
+			)
+			os.Exit(1)
+		}
 	}
 
-	if *output != "" {
-		if err := crypto.WriteFile(*output, result, *force); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+	// Saída para stdout
+	if *output == "-" {
+		// Terminal → Base64 para facilitar leitura.
+		if !cli.IsOutputPiped() {
+			fmt.Println(
+				base64.StdEncoding.EncodeToString(result),
+			)
+			return
+		}
+
+		// Pipe → bytes brutos.
+		out := os.Stdout
+
+		if _, err := out.Write(result); err != nil {
+			fmt.Fprintf(
+				os.Stderr,
+				"Error writing output: %v\n",
+				err,
+			)
 			os.Exit(1)
 		}
 
 		return
 	}
 
-	if err := crypto.WriteBase64(result); err != nil {
+	// Saída para arquivo → bytes brutos.
+	out, err := cli.OpenOutput(*output)
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+	defer out.Close()
+
+	if _, err := out.Write(result); err != nil {
+		fmt.Fprintf(
+			os.Stderr,
+			"Error writing output: %v\n",
+			err,
+		)
 		os.Exit(1)
 	}
 }
