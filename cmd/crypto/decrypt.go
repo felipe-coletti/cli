@@ -47,7 +47,6 @@ func DecryptRun(args []string) {
 		*output = "-"
 	}
 
-	// Entrada
 	in, err := cli.OpenInput(*input)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -70,7 +69,6 @@ func DecryptRun(args []string) {
 		os.Exit(1)
 	}
 
-	// Descriptografia
 	result, err := crypto.Decrypt(
 		*cipher,
 		*key,
@@ -81,7 +79,6 @@ func DecryptRun(args []string) {
 		os.Exit(1)
 	}
 
-	// Verificação de arquivo existente
 	if *output != "-" {
 		if _, err := os.Stat(*output); err == nil && !*force {
 			fmt.Fprintf(
@@ -93,7 +90,6 @@ func DecryptRun(args []string) {
 		}
 	}
 
-	// Saída
 	if *output == "-" {
 		if _, err := os.Stdout.Write(result); err != nil {
 			fmt.Fprintf(
@@ -104,8 +100,6 @@ func DecryptRun(args []string) {
 			os.Exit(1)
 		}
 
-		// Só adiciona newline se stdout for terminal
-		// e o resultado for texto.
 		if !cli.IsOutputPiped() {
 			fmt.Println()
 		}

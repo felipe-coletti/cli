@@ -48,7 +48,6 @@ func EncryptRun(args []string) {
 		*output = "-"
 	}
 
-	// Entrada
 	in, err := cli.OpenInput(*input)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -71,7 +70,6 @@ func EncryptRun(args []string) {
 		os.Exit(1)
 	}
 
-	// Criptografia
 	result, err := crypto.Encrypt(
 		*cipher,
 		*key,
@@ -82,7 +80,6 @@ func EncryptRun(args []string) {
 		os.Exit(1)
 	}
 
-	// Verificação de arquivo existente
 	if *output != "-" {
 		if _, err := os.Stat(*output); err == nil && !*force {
 			fmt.Fprintf(
@@ -94,9 +91,7 @@ func EncryptRun(args []string) {
 		}
 	}
 
-	// Saída para stdout
 	if *output == "-" {
-		// Terminal → Base64 para facilitar leitura.
 		if !cli.IsOutputPiped() {
 			fmt.Println(
 				base64.StdEncoding.EncodeToString(result),
@@ -104,7 +99,6 @@ func EncryptRun(args []string) {
 			return
 		}
 
-		// Pipe → bytes brutos.
 		out := os.Stdout
 
 		if _, err := out.Write(result); err != nil {
@@ -119,7 +113,6 @@ func EncryptRun(args []string) {
 		return
 	}
 
-	// Saída para arquivo → bytes brutos.
 	out, err := cli.OpenOutput(*output)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
