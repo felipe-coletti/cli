@@ -10,6 +10,7 @@ func NewCryptoCmd() *cli.Command {
 		Subcommands: []*cli.Command{
 			NewEncryptCmd(),
 			NewDecryptCmd(),
+			NewInspectCmd(),
 		},
 	}
 }

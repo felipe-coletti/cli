@@ -7,9 +7,6 @@ import (
 
 func Encrypt(cipherType, key string, data []byte) ([]byte, error) {
 	switch strings.ToLower(cipherType) {
-	case "aes":
-		return aesEncrypt(data, []byte(key))
-
 	case "xor":
 		return xorEncryptBytes(data, []byte(key)), nil
 
@@ -34,9 +31,6 @@ func Encrypt(cipherType, key string, data []byte) ([]byte, error) {
 
 func Decrypt(cipherType, key string, data []byte) ([]byte, error) {
 	switch strings.ToLower(cipherType) {
-	case "aes":
-		return aesDecrypt(data, []byte(key))
-
 	case "xor":
 		return xorEncryptBytes(data, []byte(key)), nil
 

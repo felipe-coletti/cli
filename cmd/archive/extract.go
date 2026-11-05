@@ -4,104 +4,46 @@ import (
 	"cli/internal/archive"
 	"cli/internal/cli"
 	"cli/internal/meta"
-	"flag"
 	"fmt"
-	"os"
-	"text/tabwriter"
 )
 
-func ExtractRun(args []string) {
-	fs := flag.NewFlagSet("extract", flag.ExitOnError)
-
-	input := fs.String("input", ".", "Input directory")
-	fs.StringVar(input, "i", ".", "Input directory (short)")
-
-	output := fs.String("output", ".", "Output directory")
-	fs.StringVar(output, "o", ".", "Output directory (short)")
-
-	format := fs.String("format", "tar", "Archive format (tar)")
-	fs.StringVar(format, "f", "tar", "Archive format (short)")
-
-	force := fs.Bool("force", false, "Overwrite output file if it exists")
-	fs.BoolVar(force, "F", false, "Overwrite output file (short)")
-
-	fs.Parse(cli.PreprocessArgs(args))
-
-	if *input == "" {
-		fmt.Fprintln(
-			os.Stderr,
-			"Error: --input (-i) is required",
-		)
-		fmt.Fprintln(os.Stderr)
-
-		ExtractHelp()
-		os.Exit(1)
-	}
-
-	if *output == "" {
-		fmt.Fprintln(
-			os.Stderr,
-			"Error: --output (-o) is required",
-		)
-		fmt.Fprintln(os.Stderr)
-
-		ExtractHelp()
-		os.Exit(1)
-	}
-
-	inputFile, err := cli.OpenInput(*input)
-	if err != nil {
-		fmt.Fprintf(
-			os.Stderr,
-			"Error: %v\n",
-			err,
-		)
-		os.Exit(1)
-	}
-	defer inputFile.Close()
-
-	options := archive.ExtractOptions{
-		Force: *force,
-	}
-
-	if err := archive.Extract(
-		*format,
-		inputFile,
-		*output,
-		options,
-	); err != nil {
-		fmt.Fprintf(
-			os.Stderr,
-			"Error: %v\n",
-			err,
-		)
-		os.Exit(1)
-	}
-}
-
-func ExtractHelp() {
-	writer := tabwriter.NewWriter(os.Stdout, 0, 8, 2, '\t', 0)
-	defer writer.Flush()
-
-	fmt.Fprintf(writer, "Usage: %s archive extract [options]\n\n", meta.Name)
-	fmt.Fprintln(writer, "Extract archives.")
-	fmt.Fprintln(writer, "\nOptions:")
-	fmt.Fprintln(writer, "  --cipher, -c <type>\tCipher type: aes, xor, rot13, caesar, vigenere (default: aes)")
-	fmt.Fprintln(writer, "  --key, -k <key>\tEncryption key (required)")
-	fmt.Fprintln(writer, "  --input, -i <path>\tInput file (optional, reads from stdin if omitted)")
-	fmt.Fprintln(writer, "  --output, -o <path>\tOutput file (optional, writes to stdout if omitted)")
-	fmt.Fprintln(writer, "  --force, -F\t\tOverwrite output file if it exists")
-	fmt.Fprintln(writer, "\nExamples:")
-	fmt.Fprintf(writer, "  echo \"secret\" | %s crypto encrypt -k mykey\n", meta.Name)
-	fmt.Fprintf(writer, "  %s crypto encrypt -k mykey -i input.txt -o output.enc\n", meta.Name)
-	fmt.Fprintf(writer, "  %s crypto encrypt -k mykey -i data.bin -o data.enc --force\n", meta.Name)
+type extractOpts struct {
+	input  string
+	output string
+	format string
+	force  bool
 }
 
 func NewExtractCmd() *cli.Command {
+	o := &extractOpts{}
+	n := meta.Name
+
 	return &cli.Command{
 		Name:        "extract",
-		Description: "Extract archives",
-		Run:         ExtractRun,
-		Help:        ExtractHelp,
+		Description: "Extract an archive into a directory",
+		Long: `
+Entries can never be written outside the output directory: paths with ".."
+are rejected and symlinks pointing outside it are refused.`,
+		Flags: func(fs *cli.FlagSet) {
+			fs.StringVar(&o.input, "input", "i", "-", "path", "Input archive (default: stdin)")
+			fs.StringVar(&o.output, "output", "o", ".", "path", "Output directory")
+			fs.StringVar(&o.format, "format", "f", "tar", "type", "Archive format: tar")
+			fs.BoolVar(&o.force, "force", "F", false, "Overwrite existing files")
+		},
+		Examples: []string{
+			fmt.Sprintf("%s archive extract -i documents.tar -o ./restore", n),
+			fmt.Sprintf("%s crypto decrypt -i docs.tar.%s | %s archive extract -o ./docs", n, n, n),
+		},
+		Run: func(args []string) error { return o.run() },
 	}
+}
+
+func (o *extractOpts) run() error {
+	in, err := cli.OpenInput(o.input)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	return archive.Extract(o.format, in, o.output, archive.ExtractOptions{Force: o.force})
 }

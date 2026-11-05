@@ -1,7 +1,11 @@
 package main
 
-import "cli/cmd"
+import (
+	"os"
+
+	"cli/cmd"
+)
 
 func main() {
-	cmd.Root()
+	os.Exit(cmd.Main(os.Args[1:]))
 }

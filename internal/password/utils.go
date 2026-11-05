@@ -5,7 +5,7 @@ import (
 	"math/big"
 )
 
-func Generate(length int, uppercase, lowercase, numbers, symbols bool) string {
+func Generate(length int, uppercase, lowercase, numbers, symbols bool) (string, error) {
 	const (
 		upperSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 		lowerSet = "abcdefghijklmnopqrstuvwxyz"
@@ -35,10 +35,13 @@ func Generate(length int, uppercase, lowercase, numbers, symbols bool) string {
 	result := make([]byte, length)
 
 	for i := range length {
-		num, _ := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		if err != nil {
+			return "", err
+		}
 
 		result[i] = charset[num.Int64()]
 	}
 
-	return string(result)
+	return string(result), nil
 }

@@ -2,52 +2,32 @@ package cli
 
 import (
 	"fmt"
-	"os"
 	"strings"
 )
 
-func PreprocessArgs(args []string) []string {
-	validArgs := []string{}
-
+// PreprocessArgs enforces the CLI's flag style: long flags use two dashes
+// (--key) and short flags are a single letter (-k).
+func PreprocessArgs(args []string) ([]string, error) {
 	for _, arg := range args {
+		if arg == "--" {
+			break // everything after "--" is positional
+		}
+
 		if strings.HasPrefix(arg, "---") {
-			fmt.Fprintf(
-				os.Stderr,
-				"invalid flag (too many dashes): %s\n",
-				arg,
-			)
-			os.Exit(1)
+			return nil, fmt.Errorf("invalid flag (too many dashes): %s", arg)
 		}
 
 		if strings.HasPrefix(arg, "--") && len(arg) < 4 {
-			if arg == "--" {
-				validArgs = append(validArgs, arg)
-				continue
-			}
-
-			fmt.Fprintf(
-				os.Stderr,
-				"invalid long flag: %s\n",
-				arg,
-			)
-			os.Exit(1)
+			return nil, fmt.Errorf("invalid long flag: %s", arg)
 		}
 
 		if strings.HasPrefix(arg, "-") &&
 			!strings.HasPrefix(arg, "--") &&
 			arg != "-" &&
 			len(arg) != 2 {
-
-			fmt.Fprintf(
-				os.Stderr,
-				"invalid short flag: %s\n",
-				arg,
-			)
-			os.Exit(1)
+			return nil, fmt.Errorf("invalid short flag: %s (long flags use two dashes)", arg)
 		}
-
-		validArgs = append(validArgs, arg)
 	}
 
-	return validArgs
+	return args, nil
 }

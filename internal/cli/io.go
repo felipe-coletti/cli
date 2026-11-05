@@ -6,18 +6,14 @@ import (
 	"os"
 )
 
-type nopCloser struct {
-	io.Reader
-	io.Writer
-}
+type nopReadCloser struct{ io.Reader }
 
-func (n nopCloser) Close() error {
-	return nil
-}
+func (nopReadCloser) Close() error { return nil }
 
+// OpenInput opens path for reading; "-" means stdin.
 func OpenInput(path string) (io.ReadCloser, error) {
 	if path == "-" {
-		return nopCloser{Reader: os.Stdin}, nil
+		return nopReadCloser{os.Stdin}, nil
 	}
 
 	file, err := os.Open(path)
@@ -28,28 +24,7 @@ func OpenInput(path string) (io.ReadCloser, error) {
 	return file, nil
 }
 
-func OpenOutput(path string) (io.WriteCloser, error) {
-	if path == "-" {
-		return nopCloser{Writer: os.Stdout}, nil
-	}
-
-	file, err := os.Create(path)
-	if err != nil {
-		return nil, fmt.Errorf("create output: %w", err)
-	}
-
-	return file, nil
-}
-
-func IsInputPiped() bool {
-	stat, err := os.Stdin.Stat()
-	if err != nil {
-		return false
-	}
-
-	return stat.Mode()&os.ModeCharDevice == 0
-}
-
+// IsOutputPiped reports whether stdout is not a terminal.
 func IsOutputPiped() bool {
 	stat, err := os.Stdout.Stat()
 	if err != nil {

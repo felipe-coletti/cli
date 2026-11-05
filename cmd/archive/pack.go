@@ -3,92 +3,55 @@ package archive
 import (
 	"cli/internal/archive"
 	"cli/internal/cli"
-	"flag"
-	"fmt"
-	"os"
-	"text/tabwriter"
-
 	"cli/internal/meta"
+	"errors"
+	"fmt"
 )
 
-func PackRun(args []string) {
-	fs := flag.NewFlagSet("pack", flag.ExitOnError)
-
-	input := fs.String("input", "", "Path to file or directory to archive")
-	fs.StringVar(input, "i", "", "Path to file or directory to archive (short)")
-
-	output := fs.String("output", "", "Path to output archive (use - for stdout)")
-	fs.StringVar(output, "o", "", "Path to output archive (short)")
-
-	format := fs.String("format", "tar", "Archive format (tar)")
-	fs.StringVar(format, "f", "tar", "Archive format (short)")
-
-	force := fs.Bool("force", false, "Overwrite output file if it exists")
-	fs.BoolVar(force, "F", false, "Overwrite output file (short)")
-
-	fs.Parse(cli.PreprocessArgs(args))
-
-	if *input == "" {
-		fmt.Fprintln(
-			os.Stderr,
-			"Error: --input (-i) is required",
-		)
-		fmt.Fprintln(os.Stderr)
-
-		PackHelp()
-		os.Exit(1)
-	}
-
-	if *output == "" {
-		*output = "-"
-	}
-
-	if *output != "-" {
-		if _, err := os.Stat(*output); err == nil && !*force {
-			fmt.Fprintf(
-				os.Stderr,
-				"Error: output file '%s' already exists. Use --force to overwrite.\n",
-				*output,
-			)
-			os.Exit(1)
-		}
-	}
-
-	out, err := cli.OpenOutput(*output)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
-	}
-	defer out.Close()
-
-	if err := archive.Pack(*format, *input, out); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
-	}
-}
-
-func PackHelp() {
-	writer := tabwriter.NewWriter(os.Stdout, 0, 8, 2, '\t', 0)
-	defer writer.Flush()
-
-	fmt.Fprintf(writer, "Usage: %s archive pack [options]\n\n", meta.Name)
-	fmt.Fprintln(writer, "Create an archive from a file or directory.")
-	fmt.Fprintln(writer, "\nOptions:")
-	fmt.Fprintln(writer, "  --input, -i <path>\tInput file or directory (required)")
-	fmt.Fprintln(writer, "  --output, -o <path>\tOutput archive (optional, use - for stdout)")
-	fmt.Fprintln(writer, "  --format, -f <type>\tArchive format: tar (default: tar)")
-	fmt.Fprintln(writer, "  --force, -F\t\tOverwrite output file if it exists")
-	fmt.Fprintln(writer, "\nExamples:")
-	fmt.Fprintf(writer, "  %s archive pack -i document.txt -o document.tar\n", meta.Name)
-	fmt.Fprintf(writer, "  %s archive pack -i ./documents -o documents.tar\n", meta.Name)
-	fmt.Fprintf(writer, "  %s archive pack -i ./documents -o documents.tar --format tar --force\n", meta.Name)
+type packOpts struct {
+	input  string
+	output string
+	format string
+	force  bool
 }
 
 func NewPackCmd() *cli.Command {
+	o := &packOpts{}
+	n := meta.Name
+
 	return &cli.Command{
 		Name:        "pack",
 		Description: "Create an archive from a file or directory",
-		Run:         PackRun,
-		Help:        PackHelp,
+		Long:        "Symlinks are stored as links (never followed).",
+		Flags: func(fs *cli.FlagSet) {
+			fs.StringVar(&o.input, "input", "i", "", "path", "Input file or directory (required)")
+			fs.StringVar(&o.output, "output", "o", "-", "path", "Output archive (default: stdout)")
+			fs.StringVar(&o.format, "format", "f", "tar", "type", "Archive format: tar")
+			fs.BoolVar(&o.force, "force", "F", false, "Overwrite output file if it exists")
+		},
+		Examples: []string{
+			fmt.Sprintf("%s archive pack -i document.txt -o document.tar", n),
+			fmt.Sprintf("%s archive pack -i ./documents -o documents.tar --force", n),
+			fmt.Sprintf("%s archive pack -i ./documents | %s crypto encrypt -z -o documents.tar.%s", n, n, n),
+		},
+		Run: func(args []string) error { return o.run() },
 	}
+}
+
+func (o *packOpts) run() error {
+	if o.input == "" {
+		return cli.Usage(errors.New("--input (-i) is required"))
+	}
+
+	out, err := cli.CreateOutput(o.output, o.force)
+	if err != nil {
+		return err
+	}
+
+	if err := archive.Pack(o.format, o.input, out); err != nil {
+		out.Abort()
+		return err
+	}
+
+	return out.Commit()
 }

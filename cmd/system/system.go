@@ -10,6 +10,7 @@ func NewSystemCmd() *cli.Command {
 		Subcommands: []*cli.Command{
 			NewDateCmd(),
 			NewInfoCmd(),
+			NewIDCmd(),
 		},
 	}
 }

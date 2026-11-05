@@ -3,59 +3,40 @@ package cmd
 import (
 	"cli/cmd/archive"
 	"cli/cmd/crypto"
+	"cli/cmd/metadata"
 	"cli/cmd/password"
 	"cli/cmd/system"
 	"cli/internal/cli"
+	"errors"
 	"fmt"
 	"os"
-	"slices"
 )
 
-var commands = []*cli.Command{
-	NewVersionCmd(),
-	archive.NewArchiveCmd(),
-	crypto.NewCryptoCmd(),
-	password.NewPasswordCmd(),
-	system.NewSystemCmd(),
+func Commands() []*cli.Command {
+	return []*cli.Command{
+		NewVersionCmd(),
+		archive.NewArchiveCmd(),
+		crypto.NewCryptoCmd(),
+		metadata.NewMetadataCmd(),
+		password.NewPasswordCmd(),
+		system.NewSystemCmd(),
+	}
 }
 
-func dispatch(commands []*cli.Command, args []string) {
-	if len(args) == 0 {
-		ShowHelp(commands)
-
-		return
+// Main runs the CLI and returns the process exit code:
+// 0 success, 1 runtime error, 2 usage error.
+func Main(args []string) int {
+	err := cli.Execute(Commands(), args)
+	if err == nil {
+		return 0
 	}
 
-	input := args[0]
-	rest := args[1:]
-
-	for _, cmd := range commands {
-		if cmd.Name == input || slices.Contains(cmd.Aliases, input) {
-			if len(cmd.Subcommands) > 0 && len(rest) > 0 {
-				dispatch(cmd.Subcommands, rest)
-
-				return
-			}
-
-			cmd.Run(rest)
-
-			return
-		}
+	var ue *cli.UsageError
+	if errors.As(err, &ue) {
+		cli.PrintUsageError(ue)
+		return 2
 	}
 
-	fmt.Printf("Unknown command: %s\n\n", input)
-
-	ShowHelp(commands)
-}
-
-func Root() {
-	args := os.Args[1:]
-
-	if len(args) == 0 || args[0] == "help" {
-		ShowHelp(commands, args[1:]...)
-
-		return
-	}
-
-	dispatch(commands, args)
+	fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+	return 1
 }
